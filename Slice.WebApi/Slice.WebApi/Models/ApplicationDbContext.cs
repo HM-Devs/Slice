@@ -1,15 +1,16 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Slice.WebApi.Models.Entities;
 
 namespace Slice.WebApi.Models
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
 
-        public DbSet<User> Users { get; set; }
         public DbSet<Artwork> Artworks { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Category> Categories { get; set; }
@@ -23,22 +24,23 @@ namespace Slice.WebApi.Models
             // User configurations
             modelBuilder.Entity<User>(entity =>
             {
-                entity.HasKey(u => u.UserId);
+                // Example: Adding an index to the Username if it's frequently used in queries
+                entity.HasIndex(u => u.UserName).HasDatabaseName("Index_Username");
 
                 entity.HasMany(u => u.Artworks)
                       .WithOne(a => a.User)
                       .HasForeignKey(a => a.UserId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasMany(u => u.Comments)
                       .WithOne(c => c.User)
                       .HasForeignKey(c => c.UserId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasMany(u => u.Reactions)
                       .WithOne(r => r.User)
                       .HasForeignKey(r => r.UserId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             // Artwork configurations
@@ -49,17 +51,17 @@ namespace Slice.WebApi.Models
                 entity.HasMany(a => a.Comments)
                       .WithOne(c => c.Artwork)
                       .HasForeignKey(c => c.ArtworkId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasMany(a => a.Reactions)
                       .WithOne(r => r.Artwork)
                       .HasForeignKey(r => r.ArtworkId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasMany(a => a.ArtworkCategories)
                       .WithOne(ac => ac.Artwork)
                       .HasForeignKey(ac => ac.ArtworkId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             // Comment configurations
